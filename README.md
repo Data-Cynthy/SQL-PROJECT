@@ -50,6 +50,7 @@ Here are examples of key queries used in the project and their results:
 <pre>
 CREATE DATABASE [AxiaStores]; --SQL Server
 </pre>
+
 2. **CREATING CustomerTB**
 <pre>
 CREATE TABLE CustomerTB
@@ -78,67 +79,60 @@ VALUES
 1. **Return the FirstName and Email of every customer who has ever purchased the product “Wireless Mouse”**
 <pre>
 --Return the FirstName and Email of every customer who has ever purchased the product “Wireless Mouse”
-select c.firstname, c.email from customertb c
-join OrdersTB o on c.CustomerID = o.CustomerID
-join ProductTB p on o.ProductID = p.ProductID
-where p.ProductID=1
+SELECT CustomerTB.FirstName, CustomerTB.Email 
+FROM CustomerTB 
+JOIN OrdersTB ON CustomerTB.CustomerID = OrdersTB.CustomerID 
+JOIN ProductTB ON OrdersTB.ProductID = ProductTB.ProductID 
+WHERE ProductTB.ProductName = 'Wireless Mouse';
 </pre>
 
 2. **List all customers’ full names in ascending alphabetical order (LastName, then FirstName)**
 <pre>
 --List all customers’ full names in ascending alphabetical order (LastName, then FirstName)
-SELECT FirstName, LastName
-FROM CustomerTB
-ORDER BY LastName ASC, FirstName ASC;
+SELECT LastName + ' ' + FirstName AS FullName 
+FROM CustomerTB 
+ORDER BY LastName ASC, FirstName ASC; 
 </pre>
 
 3. **Show every order together with the customer’s full name, the product name, quantity, unit price, total price (quantity × unit price), and order date.**
 <pre>
 --Show every order together with the customer’s full name, the product name, quantity, unit price, total price (quantity × unit price), and order date.
-select 
-c.FirstName, 
-c.LastName,
-p.productname, 
-o.quantity, 
-p.unitprice,  
-sum (p.unitprice * o.quantity) as 'total price'
-from CustomerTB c
-join orderstb o on c.customerid = c.customerid
-join producttb p on o.productid = p.productid
-GROUP BY 
-    c.FirstName, c.LastName, p.ProductName, o.Quantity,p.UnitPrice;
+SELECT  
+  CustomerTB.FirstName + ' ' + CustomerTB.LastName AS FullName, 
+  ProductTB.ProductName, 
+  OrdersTB.Quantity, 
+  ProductTB.UnitPrice, 
+  (OrdersTB.Quantity * ProductTB.UnitPrice) AS TotalPrice, 
+  OrdersTB.OrderDate 
+FROM OrdersTB 
+JOIN CustomerTB ON OrdersTB.CustomerID = CustomerTB.CustomerID 
+JOIN ProductTB ON OrdersTB.ProductID = ProductTB.ProductID; 
 </pre>
 
 4. **Show average sales per product category and sort in descending order**
 <pre>
 --Show average sales per product category and sort in descending order
-SELECT 
-    p.Category,
-    AVG(o.Quantity) AS AverageSales
-FROM ProductTB p
-JOIN OrdersTB o ON p.ProductID = o.ProductID
-GROUP BY p.Category
+SELECT  
+ProductTB.Category, 
+SUM(OrdersTB.Quantity * ProductTB.UnitPrice)/SUM(OrdersTB.Quantity) AS AverageSales 
+FROM OrdersTB 
+JOIN ProductTB ON OrdersTB.ProductID = ProductTB.ProductID 
+GROUP BY ProductTB.Category 
 ORDER BY AverageSales DESC;
-</pre>
-
-. **Which city generated the highest revenue for AxiaStores?**
+  
+5. **Which city generated the highest revenue for AxiaStores?**
 <pre>
 --Which city generated the highest revenue for AxiaStores?
-SELECT 
-    c.City,
-    SUM(p.UnitPrice) AS TotalUnitPrice,
-    SUM(o.Quantity) AS TotalQuantity,
-    SUM(p.UnitPrice * o.Quantity) AS TotalRevenue
-FROM 
-    CustomerTB c
-JOIN 
-    OrdersTB o ON c.CustomerID = o.CustomerID
-JOIN 
-    ProductTB p ON o.ProductID = p.ProductID
-GROUP BY 
-    c.City
-ORDER BY 
-    TotalRevenue DESC;
+SELECT TOP 1 
+    CustomerTB.City, 
+SUM(OrdersTB.Quantity * ProductTB.UnitPrice) AS TotalRevenue 
+FROM OrdersTB 
+JOIN ProductTB  
+ON OrdersTB.ProductID = ProductTB.ProductID 
+JOIN CustomerTB 
+ON OrdersTB.CustomerID = CustomerTB.CustomerID 
+GROUP BY CustomerTB.City 
+ORDER BY TotalRevenue DESC;
 </pre>
 
 ### References
